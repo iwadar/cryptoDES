@@ -1,3 +1,5 @@
+import java.nio.charset.StandardCharsets;
+
 public class Main {
 
     public static final byte NUMBER_BIT_IN_BYTE = 8;
@@ -22,8 +24,7 @@ public class Main {
 
     // перестановка P в сети Фейстеля
     public static final int[] P = { 16, 7, 20, 21, 29, 12, 28, 17, 1, 15, 23, 26, 5,
-            18, 31, 10, 2, 8, 24, 14, 32, 27, 3, 9, 19, 13, 30, 6, 22, 11, 4,
-            25 };
+            18, 31, 10, 2, 8, 24, 14, 32, 27, 3, 9, 19, 13, 30, 6, 22, 11, 4, 25 };
 
     // таблицы для генерации ключей
     // 64 бит -> 56 бит
@@ -89,7 +90,7 @@ public class Main {
     // error can be here
     public static byte[] permutationBits(byte[] inputArray, int[] PBlock)
     {
-        byte[] resultArray = new byte[PBlock.length / NUMBER_BIT_IN_BYTE];
+        byte[] resultArray = new byte[(PBlock.length - 1)/ NUMBER_BIT_IN_BYTE + 1];
         int position, bit;
         for (int i = 0; i < PBlock.length; i++)
         {
@@ -105,8 +106,7 @@ public class Main {
     {
         int positionByte = position / NUMBER_BIT_IN_BYTE;
         int positionBit = position % NUMBER_BIT_IN_BYTE;
-
-        return (inputArray[positionByte] >> (NUMBER_BIT_IN_BYTE - positionBit + 1) & 0x0001);
+        return inputArray[positionByte] >>> (NUMBER_BIT_IN_BYTE - (positionBit + 1)) & 0x0001;
     }
 
     // error can be here
@@ -116,14 +116,15 @@ public class Main {
         int positionBit = position % NUMBER_BIT_IN_BYTE;
 
         byte oldBit = inputArray[positionByte];
-        oldBit |= bit << (NUMBER_BIT_IN_BYTE - positionBit - 1);
-        inputArray[positionByte] = oldBit;
+        oldBit = (byte) (((0xFF7F >> positionBit) & oldBit) & 0x00FF);
+        byte newByte = (byte) ((bit << (8 - (positionBit + 1))) | oldBit);
+        inputArray[positionByte] = newByte;
     }
 
     // на вход должен идти массив, который уже разбит на блоки по 6 бит
     public static byte[] replaceUsingSBlock(byte[] inputArray)
     {
-//        inputArray = separateArrayToBlocks(inputArray, 6);
+        inputArray = separateArrayToBlocks(inputArray, 6);
         byte[] resultArray = new byte[inputArray.length / 2];
         int halfByte = 0;
         int row = 0, column = 0;
@@ -145,9 +146,9 @@ public class Main {
         return resultArray;
     }
 
-    private static byte[] separateArrayToBlocks(byte[] inputArray, int sizeBlock)
+    public static byte[] separateArrayToBlocks(byte[] inputArray, int sizeBlock)
     {
-        int numberOfBytes = (inputArray.length / NUMBER_BIT_IN_BYTE - 1) / sizeBlock + 1;
+        int numberOfBytes = (inputArray.length * NUMBER_BIT_IN_BYTE - 1) / sizeBlock + 1;
         byte[] resultArray = new byte[numberOfBytes];
         int bit;
         for (int i = 0; i < numberOfBytes; i++)
@@ -163,7 +164,7 @@ public class Main {
 
     public static byte[] extractArrayBits(byte[] inputArray, int startPosition, int length)
     {
-        byte[] resultArray = new byte[length / NUMBER_BIT_IN_BYTE + 1];
+        byte[] resultArray = new byte[(length - 1) / NUMBER_BIT_IN_BYTE + 1];
         int bit;
         for (int i = 0; i < length; i++)
         {
@@ -172,8 +173,52 @@ public class Main {
         }
         return resultArray;
     }
+    public static byte[] concateBitArray(byte[] arrayFirst, int lenFirst, byte[] arraySecond, int lenSecond)
+    {
+        byte[] resultArray = new byte[(lenFirst + lenSecond - 1) / Main.NUMBER_BIT_IN_BYTE + 1];
+        int j = 0;
+        int bit;
+        for (int i = 0; i < lenFirst; i++)
+        {
+            bit = Main.extractBitFromArray(arrayFirst, i);
+            Main.setBitIntoArray(resultArray, i, bit);
+            j += 1;
+        }
+        for (int i = 0; i < lenSecond; i++)
+        {
+            bit = Main.extractBitFromArray(arraySecond, i);
+            Main.setBitIntoArray(resultArray, j, bit);
+            j += 1;
+        }
+        return resultArray;
+    }
 
-    public static void main(String[] args) {
-        System.out.println("Hello world!");
+    public static byte[] XOR(byte[] a, byte[] b)
+    {
+        byte[] resultArray = new byte[a.length];
+        for (int i = 0; i < a.length; i++)
+        {
+            resultArray[i] = (byte) (a[i] ^ b[i]);
+        }
+        return resultArray;
+    }
+
+    public static void main(String[] args)
+    {
+        String text = "Dasha, h";
+        String key = "qwhv74^E";
+//        bnew KeyExpansion();
+        DESCryption des = new DESCryption(new EncryptTransformation(), new KeyExpansion());
+        des.setKey(key.getBytes());
+
+
+        byte[] desEncrypt = des.encrypt(text.getBytes());
+        System.out.println(new String(desEncrypt, StandardCharsets.UTF_8));
+        byte[] desDecrypt = des.decrypt(desEncrypt);
+        System.out.println(new String(desDecrypt, StandardCharsets.UTF_8));
+
+
+//        System.out.printf(new String(tmp2, StandardCharsets.UTF_8));
+//        System.out.println("Hello world!");
     }
 }

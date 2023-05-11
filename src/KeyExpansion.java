@@ -15,48 +15,37 @@ public class KeyExpansion implements IKeyExpansion
 
         for (int i = 0; i < NUMBER_OF_ROUND_KEYS; i++)
         {
-            C = shiftBits(C, Main.KShift[i], i);
-            D = shiftBits(D, Main.KShift[i], i);
+            C = shiftBits(C, 28, Main.KShift[i]);
+            D = shiftBits(D, 28, Main.KShift[i]);
 
-            key56 = concateBitArray(C, D);
+            key56 = Main.concateBitArray(C, 28, D, 28);
             roundKeys[i] = Main.permutationBits(key56, Main.KE_2);
         }
         return roundKeys;
     }
 
     @Override
-    public byte[] shiftBits(byte[] inputArray, int shift, int r)
+    public byte[] shiftBits(byte[] inputArray, int len, int shift)
     {
-        BigInteger bigInt = new BigInteger(inputArray);
-        int shiftInt = bigInt.intValue();
-        if (r == 0)
+        int nrBytes = (len - 1) / 8 + 1;
+        byte[] out = new byte[nrBytes];
+        for (int i = 0; i < len; i++)
         {
-            shiftInt = shiftInt >>> 4;
+            int val = Main.extractBitFromArray(inputArray, (i + shift) % len);
+            Main.setBitIntoArray(out, i, val);
         }
-        shiftInt = ((shiftInt << shift) & 268435455) | (shiftInt >>> (28 - shift));
-        ByteBuffer buf = ByteBuffer.allocate(4);
-        buf.putInt(shiftInt);
-        return buf.array();
+        return out;
     }
 
-    @Override
-    public byte[] concateBitArray(byte[] arrayFirst, byte[] arraySecond)
-    {
-        byte[] resultArray = new byte[(arrayFirst.length + arraySecond.length) / Main.NUMBER_BIT_IN_BYTE];
-        int j = 0;
-        int bit;
-        for (int i = 0; i < arrayFirst.length; i++)
-        {
-            bit = Main.extractBitFromArray(arrayFirst, i);
-            Main.setBitIntoArray(resultArray, i, bit);
-            j += 1;
-        }
-        for (int i = 0; i < arraySecond.length; i++)
-        {
-            bit = Main.extractBitFromArray(arraySecond, i);
-            Main.setBitIntoArray(resultArray, j, bit);
-            j += 1;
-        }
-        return resultArray;
-    }
+//    public byte[] shiftBits(byte[] inputArray, int shift, int r) {
+//        BigInteger bigInt = new BigInteger(inputArray);
+//        int shiftInt = bigInt.intValue();
+//        if (r == 0) {
+//            shiftInt = shiftInt >>> 4;
+//        }
+//        shiftInt = ((shiftInt << shift) & 268435455) | (shiftInt >>> (28 - shift));
+//        ByteBuffer buf = ByteBuffer.allocate(4);
+//        buf.putInt(shiftInt);
+//        return buf.array();
+//    }
 }
