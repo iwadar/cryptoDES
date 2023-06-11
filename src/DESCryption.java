@@ -39,18 +39,6 @@ public class DESCryption implements ISymmetricalCipher
         return  Main.concateBitArray(R, Main.IP.length / 2, L, Main.IP.length / 2);
     }
 
-    private byte[] oneRoundDecrypt(byte[] inputArray, int round)
-    {
-        byte[] L = Main.extractArrayBits(inputArray, 0, Main.IP.length / 2);
-        byte[] R = Main.extractArrayBits(inputArray, Main.IP.length / 2, Main.IP.length / 2);
-        byte[] tempL = L;
-
-        L = encryptTransformation.encryptBlock(L, roundKeys[round]);
-        L = Main.XOR(L, R);
-        R = tempL;
-
-        return Main.concateBitArray(R, Main.IP.length / 2, L, Main.IP.length / 2);
-    }
 
     @Override
     public byte[] encrypt(byte[] inputArray)
@@ -91,6 +79,18 @@ public class DESCryption implements ISymmetricalCipher
 //        return copyInputArrayWithPadding;
     }
 
+    private byte[] oneRoundDecrypt(byte[] inputArray, int round)
+    {
+        byte[] L = Main.extractArrayBits(inputArray, 0, Main.IP.length / 2);
+        byte[] R = Main.extractArrayBits(inputArray, Main.IP.length / 2, Main.IP.length / 2);
+        byte[] tempR = R;
+
+        R = encryptTransformation.encryptBlock(R, roundKeys[round]);
+        R = Main.XOR(L, R);
+        L = tempR;
+
+        return  Main.concateBitArray(R, Main.IP.length / 2, L, Main.IP.length / 2);
+    }
     @Override
     public byte[] decrypt(byte[] inputArray)
     {
@@ -102,8 +102,7 @@ public class DESCryption implements ISymmetricalCipher
             block = Main.permutationBits(block, Main.IP);
             for (int k = 0; k < KeyExpansion.NUMBER_OF_ROUND_KEYS; k++)
             {
-                block = oneRoundEncrypt(block, 15 - k);
-//                block = oneRoundDecrypt(block, 15 - k);
+                block = oneRoundDecrypt(block, 15 - k);
             }
             block = Main.permutationBits(block, Main.inverseIP);
             System.arraycopy(block, 0, inputArray, i, Main.NUMBER_BIT_IN_BYTE);

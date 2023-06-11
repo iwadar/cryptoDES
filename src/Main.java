@@ -229,14 +229,13 @@ public class Main {
 
         byte[] desEncrypt = des.encrypt(preparationToEncrypt(fileData));
         byte[] desDecrypt = postProcessing(des.decrypt(desEncrypt));
-        try (OutputStream out = new BufferedOutputStream(new FileOutputStream("/home/dasha/java/cryptoDES/src/picture1.jpg"));
-        ) {
+        try (OutputStream out = new BufferedOutputStream(new FileOutputStream("/home/dasha/java/cryptoDES/src/picture1.jpg"))) {
             out.write(desDecrypt);
 
         } catch (FileNotFoundException e) {
-            System.out.println("Ex");
+            System.out.println("File not found");
         } catch (IOException e) {
-            System.out.println("Ex2");
+            System.out.println("Can't open(");
         }
     }
 }
