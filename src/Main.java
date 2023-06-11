@@ -1,4 +1,6 @@
-import java.nio.charset.StandardCharsets;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class Main {
 
@@ -87,7 +89,6 @@ public class Main {
                     { 2, 1, 14, 7, 4, 10, 18, 13, 15, 12, 9, 0, 3, 5, 6, 11 }
 
             } };
-    // error can be here
     public static byte[] permutationBits(byte[] inputArray, int[] PBlock)
     {
         byte[] resultArray = new byte[(PBlock.length - 1)/ NUMBER_BIT_IN_BYTE + 1];
@@ -101,7 +102,6 @@ public class Main {
         return resultArray;
     }
 
-    // error can be here
     public static int extractBitFromArray(byte[] inputArray, int position)
     {
         int positionByte = position / NUMBER_BIT_IN_BYTE;
@@ -109,7 +109,6 @@ public class Main {
         return inputArray[positionByte] >>> (NUMBER_BIT_IN_BYTE - (positionBit + 1)) & 0x0001;
     }
 
-    // error can be here
     public static void setBitIntoArray(byte[] inputArray, int position, int bit)
     {
         int positionByte = position / NUMBER_BIT_IN_BYTE;
@@ -130,7 +129,6 @@ public class Main {
         int row = 0, column = 0;
         for (int i = 0; i < inputArray.length; i++)
         {
-            // зачем умножили на 2?
             row = 2 * (inputArray[i] >> 7 & 0x0001) + (inputArray[i] >> 2 & 0x0001);
             column = inputArray[i] >> 3 & 0x000F;
             if (i % 2 == 0)
@@ -139,7 +137,6 @@ public class Main {
             }
             else
             {
-                // почему мы умножаем на 16?
                 resultArray[i / 2] = (byte) (16 * halfByte + SBlocks[i][row][column]);
             }
         }
@@ -203,22 +200,43 @@ public class Main {
         return resultArray;
     }
 
+    private static byte[] preparationToEncrypt(byte[] inputArray) {
+        int lengthPadding = Main.NUMBER_BIT_IN_BYTE - inputArray.length % Main.NUMBER_BIT_IN_BYTE;
+        byte[] copyInputArrayWithPadding = new byte[inputArray.length + lengthPadding];
+        System.arraycopy(inputArray, 0, copyInputArrayWithPadding, 0, inputArray.length);
+        for (int i = 0; i < lengthPadding; i++)
+        {
+            copyInputArrayWithPadding[inputArray.length + i] = (byte)lengthPadding;
+        }
+        return copyInputArrayWithPadding;
+    }
+
+    private static byte[] postProcessing(byte[] initArray) {
+        return HelpFunction.deletePadding(initArray);
+    }
+
     public static void main(String[] args)
     {
-        String text = "Dasha, h";
-        String key = "qwhv74^E";
-//        bnew KeyExpansion();
-        DESCryption des = new DESCryption(new EncryptTransformation(), new KeyExpansion());
-        des.setKey(key.getBytes());
+        String text = "Dasha, hello! Bla)))";
+        String initializationVector = HelpFunction.generateRandomString(8);
+        D_Encryption des = new D_Encryption(new DESCryption(new EncryptTransformation(), new KeyExpansion()), ModeCipher.OFB, initializationVector);
+        byte[] fileData = new byte[1];
+        try {
+            fileData = Files.readAllBytes(Paths.get("/home/dasha/java/cryptoDES/src/picture.jpg"));
+        } catch (IOException e) {
+            System.out.println("File not found");
+        }
 
+        byte[] desEncrypt = des.encrypt(preparationToEncrypt(fileData));
+        byte[] desDecrypt = postProcessing(des.decrypt(desEncrypt));
+        try (OutputStream out = new BufferedOutputStream(new FileOutputStream("/home/dasha/java/cryptoDES/src/picture1.jpg"));
+        ) {
+            out.write(desDecrypt);
 
-        byte[] desEncrypt = des.encrypt(text.getBytes());
-        System.out.println(new String(desEncrypt, StandardCharsets.UTF_8));
-        byte[] desDecrypt = des.decrypt(desEncrypt);
-        System.out.println(new String(desDecrypt, StandardCharsets.UTF_8));
-
-
-//        System.out.printf(new String(tmp2, StandardCharsets.UTF_8));
-//        System.out.println("Hello world!");
+        } catch (FileNotFoundException e) {
+            System.out.println("Ex");
+        } catch (IOException e) {
+            System.out.println("Ex2");
+        }
     }
 }

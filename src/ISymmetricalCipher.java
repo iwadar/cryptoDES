@@ -1,4 +1,4 @@
-public interface IDESCryption
+public interface ISymmetricalCipher
 {
     byte[] encrypt(byte[] inputArray);
     byte[] decrypt(byte[] inputArray);

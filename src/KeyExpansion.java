@@ -1,6 +1,3 @@
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-
 public class KeyExpansion implements IKeyExpansion
 {
     static final int NUMBER_OF_ROUND_KEYS = 16;
@@ -36,16 +33,4 @@ public class KeyExpansion implements IKeyExpansion
         }
         return out;
     }
-
-//    public byte[] shiftBits(byte[] inputArray, int shift, int r) {
-//        BigInteger bigInt = new BigInteger(inputArray);
-//        int shiftInt = bigInt.intValue();
-//        if (r == 0) {
-//            shiftInt = shiftInt >>> 4;
-//        }
-//        shiftInt = ((shiftInt << shift) & 268435455) | (shiftInt >>> (28 - shift));
-//        ByteBuffer buf = ByteBuffer.allocate(4);
-//        buf.putInt(shiftInt);
-//        return buf.array();
-//    }
 }
